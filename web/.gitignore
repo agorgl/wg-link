@@ -22,3 +22,6 @@
 
 # clojure-lsp cache
 /.lsp/.cache
+
+# tailwindcss generated
+/resources/public/css/site.css
