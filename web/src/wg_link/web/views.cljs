@@ -36,6 +36,13 @@
      [:span {:class "text-sm"}
       "New Peer"]]]])
 
+(defn peers []
+  (let [peers (re-frame/subscribe [::subs/peers])]
+    (if (empty? @peers)
+      [no-peers]
+      [:div {:class "m-8"}
+       [hello]])))
+
 (defn content []
   [:div {:class "shadow-md rounded-lg bg-white overflow-hidden"}
    [:div {:class "flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100"}
@@ -47,7 +54,7 @@
       [icon-plus]
       [:span {:class "text-sm"}
        "New"]]]]
-   [no-peers]])
+   [peers]])
 
 (defn app []
   [:div {:class "w-screen h-screen bg-gray-50 overflow-auto"}
