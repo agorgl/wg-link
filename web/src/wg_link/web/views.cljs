@@ -85,7 +85,8 @@
         :class "align-middle inline-block bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"}
     [icon-download]]
    [:button {:title "Delete Peer"
-             :class "align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"}
+             :class "align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"
+             :on-click #(re-frame/dispatch [::events/delete-peer name])}
     [icon-delete]]])
 
 (defn icon-avatar []

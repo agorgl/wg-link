@@ -29,3 +29,10 @@
  (fn [db [_ peer enable]]
    (let [pidx (index-of #(= (:name %) peer) (get-in db [:peers]))]
      (assoc-in db [:peers pidx :enabled] enable))))
+
+(re-frame/reg-event-db
+ ::delete-peer
+ (fn [db [_ peer]]
+   (update-in db [:peers]
+              (fn [peers]
+                (vec (remove #(= (:name %) peer) peers))))))
