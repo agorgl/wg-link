@@ -105,7 +105,7 @@
            :stroke-width "2"
            :d "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"}]])
 
-(defn peer [{:keys [name ip]}]
+(defn peer [{:keys [name ip] :as p}]
   [:div {:class "relative overflow-hidden border-b border-gray-100 border-solid"}
    [:div {:class "relative p-5 z-10 flex flex-row"}
     [:div {:class "h-10 w-10 my-auto mr-4 rounded-full bg-gray-50 relative"}
@@ -126,7 +126,7 @@
        [:span {:class "cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"}
         [icon-edit]]]]]
     [:div {:class "text-right my-auto"}
-     [peer-controls {:enabled true}]]]])
+     [peer-controls p]]]])
 
 (defn peers []
   (let [peers (re-frame/subscribe [::subs/peers])]
