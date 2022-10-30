@@ -67,11 +67,12 @@
            :d "M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
            :clip-rule "evenodd"}]])
 
-(defn peer-controls []
+(defn peer-controls [{:keys [enabled]}]
   [:div {:class "text-gray-400 space-x-1"}
-   [:div {:title "Disable Peer"
-          :class "inline-block align-middle rounded-full w-10 h-6 mr-1 bg-red-800 cursor-pointer hover:bg-red-700 transition-all"}
-    [:div {:class "rounded-full w-4 h-4 m-1 ml-5 bg-white"}]]
+   [:div {:title (str (if enabled "Disable" "Enable") " Peer")
+          :class "inline-block align-middle rounded-full w-10 h-6 mr-1 data-[enabled=true]:bg-red-800 data-[enabled=false]:bg-gray-200 cursor-pointer data-[enabled=true]:hover:bg-red-700 data-[enabled=false]:hover:bg-gray-300 transition-all group"
+          :data-enabled enabled}
+    [:div {:class "rounded-full w-4 h-4 m-1 group-data-[enabled=true]:ml-5 bg-white"}]]
    [:button {:title "Show QR Code"
              :class "align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"}
     [icon-qr]]
@@ -125,7 +126,7 @@
        [:span {:class "cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"}
         [icon-edit]]]]]
     [:div {:class "text-right my-auto"}
-     [peer-controls]]]])
+     [peer-controls {:enabled true}]]]])
 
 (defn peers []
   (let [peers (re-frame/subscribe [::subs/peers])]
