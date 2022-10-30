@@ -104,7 +104,7 @@
            :stroke-width "2"
            :d "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"}]])
 
-(defn peer [name ip]
+(defn peer [{:keys [name ip]}]
   [:div {:class "relative overflow-hidden border-b border-gray-100 border-solid"}
    [:div {:class "relative p-5 z-10 flex flex-row"}
     [:div {:class "h-10 w-10 my-auto mr-4 rounded-full bg-gray-50 relative"}
@@ -132,8 +132,8 @@
     (if (empty? @peers)
       [no-peers]
       [:div
-       (for [c (range 3)]
-         ^{:key c} [peer (str "peer-" (inc c)) (str "10.5.5." (inc c))])])))
+       (for [p @peers]
+         ^{:key p} [peer p])])))
 
 (defn content []
   [:div {:class "shadow-md rounded-lg bg-white overflow-hidden"}
