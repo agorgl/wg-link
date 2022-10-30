@@ -113,7 +113,9 @@
         value (reagent/atom name)
         input (atom nil)
         submit (fn []
-                 (reset! edit false))]
+                 (when @edit
+                   (reset! edit false)
+                   (re-frame/dispatch [::events/update-peer-name name @value])))]
     (fn []
       [:div {:title "Created on Oct 28, 2022, 8:48 PM"
              :class "text-gray-700 group space-x-1"
@@ -133,12 +135,14 @@
                              (submit)))}
         [icon-edit]]])))
 
-(defn peer-ip [ip]
+(defn peer-ip [name ip]
   (let [edit (reagent/atom false)
         value (reagent/atom ip)
         input (atom nil)
         submit (fn []
-                 (reset! edit false))]
+                 (when @edit
+                   (reset! edit false)
+                   (re-frame/dispatch [::events/update-peer-ip name @value])))]
     (fn []
       [:div {:class "text-gray-400 text-xs"}
        [:span {:class "group space-x-1"
@@ -165,7 +169,7 @@
      [icon-avatar]]
     [:div {:class "flex-grow"}
      [peer-name name]
-     [peer-ip ip]]
+     [peer-ip name ip]]
     [:div {:class "text-right my-auto"}
      [peer-controls p]]]])
 

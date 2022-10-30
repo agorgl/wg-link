@@ -13,6 +13,18 @@
    db/default-db))
 
 (re-frame/reg-event-db
+ ::update-peer-name
+ (fn [db [_ peer name]]
+   (let [pidx (index-of #(= (:name %) peer) (get-in db [:peers]))]
+     (assoc-in db [:peers pidx :name] name))))
+
+(re-frame/reg-event-db
+ ::update-peer-ip
+ (fn [db [_ peer ip]]
+   (let [pidx (index-of #(= (:name %) peer) (get-in db [:peers]))]
+     (assoc-in db [:peers pidx :ip] ip))))
+
+(re-frame/reg-event-db
  ::enable-peer
  (fn [db [_ peer enable]]
    (let [pidx (index-of #(= (:name %) peer) (get-in db [:peers]))]
