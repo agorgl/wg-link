@@ -129,12 +129,13 @@
      [peer-controls p]]]])
 
 (defn peers []
-  (let [peers (re-frame/subscribe [::subs/peers])]
+  (let [peers (re-frame/subscribe [::subs/peer-ids])]
     (if (empty? @peers)
       [no-peers]
       [:div
-       (for [p @peers]
-         ^{:key p} [peer p])])))
+       (doall
+        (for [p @peers]
+          ^{:key p} [peer @(re-frame/subscribe [::subs/peer p])]))])))
 
 (defn content []
   [:div {:class "shadow-md rounded-lg bg-white overflow-hidden"}
