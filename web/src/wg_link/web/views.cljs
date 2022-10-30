@@ -5,6 +5,8 @@
    [wg-link.web.subs :as subs]
    [wg-link.web.events :as events]))
 
+(defonce dialog (reagent/atom nil))
+
 (defn header []
   [:h1 {:class "text-4xl font-medium my-10"}
    [:img {:src "./img/wireguard.svg" :width "32" :class "inline align-middle mr-2"}]
@@ -33,7 +35,8 @@
     "There are no peers yet."
     [:br]
     [:br]
-    [:button {:class "bg-red-800 text-white hover:bg-red-700 border-2 border-none py-2 px-4 rounded inline-flex items-center transition"}
+    [:button {:class "bg-red-800 text-white hover:bg-red-700 border-2 border-none py-2 px-4 rounded inline-flex items-center transition"
+              :on-click #(reset! dialog :new-peer)}
      [icon-plus]
      [:span {:class "text-sm"}
       "New Peer"]]]])
@@ -190,14 +193,74 @@
      [:p {:class "text-2xl font-medium"}
       "Peers"]]
     [:div {:class "flex-shrink-0"}
-     [:button {:class "hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition"}
+     [:button {:class "hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition"
+               :on-click #(reset! dialog :new-peer)}
       [icon-plus]
       [:span {:class "text-sm"}
        "New"]]]]
    [peers]])
 
+(defn icon-plus-big []
+  [:svg {:inline ""
+         :xmlns "http://www.w3.org/2000/svg"
+         :fill "none"
+         :viewBox "0 0 24 24"
+         :stroke "currentColor"
+         :class "h-6 w-6 text-white"}
+   [:path {:stroke-linecap "round"
+           :stroke-linejoin "round"
+           :stroke-width "2"
+           :d "M12 6v6m0 0v6m0-6h6m-6 0H6"}]])
+
+(defn new-peer-dialog []
+  (let [name (reagent/atom nil)]
+    (fn []
+      [:div {:class "fixed z-10 inset-0 overflow-y-auto"}
+       [:div {:class "flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"}
+        [:div {:aria-hidden "true"
+               :class "fixed inset-0 transition-opacity"}
+         [:div {:class "absolute inset-0 bg-gray-500 opacity-75"}]]
+        [:span {:aria-hidden "true"
+                :class "hidden sm:inline-block sm:align-middle sm:h-screen"}]
+        [:div {:role "dialog"
+               :aria-modal "true"
+               :aria-labelledby "modal-headline"
+               :class "inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"}
+         [:div {:class "bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4"}
+          [:div {:class "sm:flex sm:items-start"}
+           [:div {:class "mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-800 sm:mx-0 sm:h-10 sm:w-10"}
+            [icon-plus-big]]
+           [:div {:class "flex-grow mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left"}
+            [:h3 {:id "modal-headline"
+                  :class "text-lg leading-6 font-medium text-gray-900"}
+             "New Peer"]
+            [:div {:class "mt-2"}
+             [:p {:class "text-sm text-gray-500"}
+              [:input {:type "text"
+                       :placeholder "Name"
+                       :class "rounded p-2 border-2 border-gray-100 focus:border-gray-200 outline-none w-full"
+                       :value @name
+                       :on-change #(reset! name (-> % .-target .-value))
+                       :on-key-press #(when (= (.-key %) "Enter") (reset! dialog nil))}]]]]]]
+         [:div {:class "bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"}
+          [:button {:type "button"
+                    :class "w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 disabled:bg-gray-200 enabled:bg-red-800 enabled:hover:bg-red-700 enabled:focus:outline-none text-base font-medium text-white sm:ml-3 sm:w-auto sm:text-sm disabled:cursor-not-allowed"
+                    :disabled (empty? @name)
+                    :on-click #(reset! dialog nil)}
+           "Create"]
+          [:button {:type "button"
+                    :class "mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                    :on-click #(reset! dialog nil)}
+           "Cancel"]]]]])))
+
+(defn dialogs []
+  (when-let [dialog @dialog]
+    (case dialog
+      :new-peer [new-peer-dialog])))
+
 (defn app []
   [:div {:class "w-screen h-screen bg-gray-50 overflow-auto"}
    [:div {:class "container mx-auto max-w-3xl"}
     [header]
-    [content]]])
+    [content]
+    [dialogs]]])
