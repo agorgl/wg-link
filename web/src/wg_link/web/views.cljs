@@ -1,5 +1,6 @@
 (ns wg-link.web.views
   (:require
+   [reagent.core :as reagent]
    [re-frame.core :as re-frame]
    [wg-link.web.subs :as subs]
    [wg-link.web.events :as events]))
@@ -107,26 +108,64 @@
            :stroke-width "2"
            :d "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"}]])
 
+(defn peer-name [name]
+  (let [edit (reagent/atom false)
+        value (reagent/atom name)
+        input (atom nil)
+        submit (fn []
+                 (reset! edit false))]
+    (fn []
+      [:div {:title "Created on Oct 28, 2022, 8:48 PM"
+             :class "text-gray-700 group space-x-1"
+             :data-edit @edit}
+       [:input {:class "group-data-[edit=false]:hidden rounded px-1 border-2 border-gray-100 focus:border-gray-200 outline-none w-30"
+                :value @value
+                :on-change #(reset! value (-> % .-target .-value))
+                :on-key-press #(when (= (.-key %) "Enter") (submit))
+                :on-blur submit
+                :ref #(reset! input %)}]
+       [:span {:class "group-data-[edit=true]:hidden inline-block border-t-2 border-b-2 border-transparent"}
+        @value]
+       [:span {:class "cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+               :on-click (fn []
+                           (if (swap! edit not)
+                             (js/setTimeout #(-> @input .focus) 1)
+                             (submit)))}
+        [icon-edit]]])))
+
+(defn peer-ip [ip]
+  (let [edit (reagent/atom false)
+        value (reagent/atom ip)
+        input (atom nil)
+        submit (fn []
+                 (reset! edit false))]
+    (fn []
+      [:div {:class "text-gray-400 text-xs"}
+       [:span {:class "group space-x-1"
+               :data-edit @edit}
+        [:input {:class "group-data-[edit=false]:hidden rounded border-2 border-gray-100 focus:border-gray-200 outline-none w-20 text-black"
+                 :value @value
+                 :on-change #(reset! value (-> % .-target .-value))
+                 :on-key-press #(when (= (.-key %) "Enter") (submit))
+                 :on-blur submit
+                 :ref #(reset! input %)}]
+        [:span {:class "group-data-[edit=true]:hidden inline-block border-t-2 border-b-2 border-transparent"}
+         @value]
+        [:span {:class "cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                :on-click (fn []
+                            (if (swap! edit not)
+                              (js/setTimeout #(-> @input .focus) 1)
+                              (submit)))}
+         [icon-edit]]]])))
+
 (defn peer [{:keys [name ip] :as p}]
   [:div {:class "relative overflow-hidden border-b border-gray-100 border-solid"}
    [:div {:class "relative p-5 z-10 flex flex-row"}
     [:div {:class "h-10 w-10 my-auto mr-4 rounded-full bg-gray-50 relative"}
      [icon-avatar]]
     [:div {:class "flex-grow"}
-     [:div {:title "Created on Oct 28, 2022, 8:48 PM"
-            :class "text-gray-700 group space-x-1"}
-      [:input {:class "hidden rounded px-1 border-2 border-gray-100 focus:border-gray-200 outline-none w-30"}]
-      [:span {:class "inline-block border-t-2 border-b-2 border-transparent"}
-       name]
-      [:span {:class "cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"}
-       [icon-edit]]]
-     [:div {:class "text-gray-400 text-xs"}
-      [:span {:class "group space-x-1"}
-       [:input {:class "hidden rounded border-2 border-gray-100 focus:border-gray-200 outline-none w-20 text-black"}]
-       [:span {:class "inline-block border-t-2 border-b-2 border-transparent"}
-        ip]
-       [:span {:class "cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"}
-        [icon-edit]]]]]
+     [peer-name name]
+     [peer-ip ip]]
     [:div {:class "text-right my-auto"}
      [peer-controls p]]]])
 
