@@ -213,7 +213,10 @@
            :d "M12 6v6m0 0v6m0-6h6m-6 0H6"}]])
 
 (defn new-peer-dialog []
-  (let [name (reagent/atom nil)]
+  (let [name (reagent/atom nil)
+        submit (fn []
+                 (reset! dialog nil)
+                 (re-frame/dispatch [::events/add-peer @name]))]
     (fn []
       [:div {:class "fixed z-10 inset-0 overflow-y-auto"}
        [:div {:class "flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"}
@@ -241,12 +244,12 @@
                        :class "rounded p-2 border-2 border-gray-100 focus:border-gray-200 outline-none w-full"
                        :value @name
                        :on-change #(reset! name (-> % .-target .-value))
-                       :on-key-press #(when (= (.-key %) "Enter") (reset! dialog nil))}]]]]]]
+                       :on-key-press #(when (= (.-key %) "Enter") (submit))}]]]]]]
          [:div {:class "bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"}
           [:button {:type "button"
                     :class "w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 disabled:bg-gray-200 enabled:bg-red-800 enabled:hover:bg-red-700 enabled:focus:outline-none text-base font-medium text-white sm:ml-3 sm:w-auto sm:text-sm disabled:cursor-not-allowed"
                     :disabled (empty? @name)
-                    :on-click #(reset! dialog nil)}
+                    :on-click submit}
            "Create"]
           [:button {:type "button"
                     :class "mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
