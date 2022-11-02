@@ -20,7 +20,7 @@ Run the project, overriding the name to be greeted:
     $ clojure -X:run-x :name '"Someone"'
     Hello, Someone!
 
-Run the project directly, via `:main-opts` (`-m wg-link.service`):
+Run the project directly, via `:main-opts` (`-m wg-link.service.core`):
 
     $ clojure -M:run-m
     Hello, World!

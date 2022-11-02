@@ -1,8 +1,8 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.11.1"}}
  :aliases
- {:run-m {:main-opts ["-m" "wg-link.service"]}
-  :run-x {:ns-default wg-link.service
+ {:run-m {:main-opts ["-m" "wg-link.service.core"]}
+  :run-x {:ns-default wg-link.service.core
           :exec-fn greet
           :exec-args {:name "Clojure"}}
   :build {:deps {io.github.seancorfield/build-clj

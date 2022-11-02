@@ -1,4 +1,4 @@
-(ns wg-link.service
+(ns wg-link.service.core
   (:gen-class))
 
 (defn greet
