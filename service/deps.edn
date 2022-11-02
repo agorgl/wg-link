@@ -1,5 +1,8 @@
 {:paths ["src" "resources"]
- :deps {org.clojure/clojure {:mvn/version "1.11.1"}}
+ :deps {org.clojure/clojure {:mvn/version "1.11.1"}
+        io.pedestal/pedestal.service {:mvn/version "0.5.10"}
+        io.pedestal/pedestal.jetty {:mvn/version "0.5.10"}
+        ch.qos.logback/logback-classic {:mvn/version "1.2.10" :exclusions [org.slf4j/slf4j-api]}}
  :aliases
  {:run-m {:main-opts ["-m" "wg-link.service.core"]}
   :run-x {:ns-default wg-link.service.core
