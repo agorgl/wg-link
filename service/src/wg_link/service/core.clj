@@ -23,6 +23,10 @@
   (let [id (get-in request [:path-params :id])]
     {:status 200 :body (db/peer-get id)}))
 
+(defn peer-conf [request]
+  (let [id (get-in request [:path-params :id])]
+    {:status 200 :body (db/peer-conf id)}))
+
 (defn peer-delete [request]
   (let [id (get-in request [:path-params :id])]
     (db/peer-delete id)
@@ -31,11 +35,12 @@
 (def common-interceptors [(body-params/body-params) http/json-body])
 
 (def routes
-  #{["/greet"     :get    (conj common-interceptors `hello-world)]
-    ["/peers"     :get    (conj common-interceptors `peer-list)]
-    ["/peers"     :post   (conj common-interceptors `peer-add)]
-    ["/peers/:id" :get    (conj common-interceptors `peer-get)]
-    ["/peers/:id" :delete (conj common-interceptors `peer-delete)]})
+  #{["/greet"          :get    (conj common-interceptors `hello-world)]
+    ["/peers"          :get    (conj common-interceptors `peer-list)]
+    ["/peers"          :post   (conj common-interceptors `peer-add)]
+    ["/peers/:id"      :get    (conj common-interceptors `peer-get)]
+    ["/peers/:id/conf" :get    (conj common-interceptors `peer-conf)]
+    ["/peers/:id"      :delete (conj common-interceptors `peer-delete)]})
 
 (def service {:env                 :prod
               ::http/routes        routes

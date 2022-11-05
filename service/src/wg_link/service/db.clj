@@ -54,6 +54,12 @@
        (filter #(= (str (:id %)) id))
        (first)))
 
+(defn peer-conf [id]
+  (->> (:peers @db)
+       (filter #(= (str (:id %)) id))
+       (first)
+       (wg/peer-conf (assoc (:server @db) :network (:network @db)))))
+
 (defn peer-delete [id]
   (swap! db update-in [:peers]
          (fn [peers]
