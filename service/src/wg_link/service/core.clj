@@ -1,15 +1,18 @@
 (ns wg-link.service.core
   (:gen-class) ; for -main method in uberjar
   (:require [io.pedestal.http :as http]
-            [io.pedestal.http.route :as route]))
+            [io.pedestal.http.route :as route]
+            [io.pedestal.http.body-params :as body-params]))
 
 (defn hello-world
   [request]
   (let [name (get-in request [:params :name] "World")]
-    {:status 200 :body (str "Hello " name "!\n")}))
+    {:status 200 :body {:message (str "Hello " name "!")}}))
+
+(def common-interceptors [(body-params/body-params) http/json-body])
 
 (def routes
-  #{["/greet" :get `hello-world]})
+  #{["/greet" :get (conj common-interceptors `hello-world)]})
 
 (def service {:env                 :prod
               ::http/routes        routes
