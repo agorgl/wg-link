@@ -43,3 +43,23 @@
   (->> (peer-sections server peer)
        (map (fn [[k v]] (ini-section k v)))
        (str/join "\n\n")))
+
+(defn server-sections [server peers]
+  (concat
+   [[:interface {:private-key (:private-key server)
+                 :address (str (:address server) "/" (second (str/split (:network server) #"/")))
+                 :listen-port (:listen-port server)}]]
+   (map (fn [peer]
+          [:peer {:public-key (:public-key peer)
+                  :preshared-key (:preshared-key peer)
+                  :allowed-ips (str (:address peer) "/32")}])
+        peers)))
+
+(defn server-conf [server peers]
+  (->> (server-sections server peers)
+       (map (fn [[k v]] (ini-section k v)))
+       (str/join "\n\n")))
+
+(defn update-conf [server peers]
+  (->> (server-conf server peers)
+       (spit "/etc/wireguard/" (:name server) ".conf")))
