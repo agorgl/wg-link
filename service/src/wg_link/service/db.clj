@@ -1,15 +1,17 @@
 (ns wg-link.service.db
-  (:require [wg-link.service.cidr :as cidr]))
+  (:require [wg-link.service.cidr :as cidr]
+            [wg-link.service.wireguard :as wg]))
 
 (defn- new-network [nm net]
-  {:name nm
-   :network net
-   :server {:address (first (cidr/available-ips net []))
-            :private-key "SECRET"
-            :public-key "PUBLIC"
-            :domain "somedomain.com"
-            :listen-port 56000}
-   :peers []})
+  (let [[private-key public-key] (wg/keypair-gen)]
+    {:name nm
+     :network net
+     :server {:address (first (cidr/available-ips net []))
+              :private-key private-key
+              :public-key public-key
+              :domain "somedomain.com"
+              :listen-port 56000}
+     :peers []}))
 
 (def peer-id-gen (atom 0))
 
@@ -17,12 +19,14 @@
   (swap! peer-id-gen inc))
 
 (defn- new-peer [nm addr]
-  {:id (next-peer-id)
-   :name nm
-   :address addr
-   :private-key "PRIVATE"
-   :preshared-key "SHARED"
-   :public-key "PUBLIC"})
+  (let [[private-key public-key] (wg/keypair-gen)
+        shared-key (wg/shared-key-gen)]
+    {:id (next-peer-id)
+     :name nm
+     :address addr
+     :private-key private-key
+     :preshared-key shared-key
+     :public-key public-key}))
 
 (def db (atom (new-network "wg0" "10.5.5.0/24")))
 
