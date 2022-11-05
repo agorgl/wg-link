@@ -2,17 +2,39 @@
   (:gen-class) ; for -main method in uberjar
   (:require [io.pedestal.http :as http]
             [io.pedestal.http.route :as route]
-            [io.pedestal.http.body-params :as body-params]))
+            [io.pedestal.http.body-params :as body-params]
+            [wg-link.service.db :as db]))
 
 (defn hello-world
   [request]
   (let [name (get-in request [:params :name] "World")]
     {:status 200 :body {:message (str "Hello " name "!")}}))
 
+(defn peer-list [_]
+  {:status 200 :body (db/peer-list)})
+
+(defn peer-add [request]
+  (let [nm (get-in request [:json-params :name])]
+    (db/peer-add nm)
+    {:status 201}))
+
+(defn peer-get [request]
+  (let [id (get-in request [:path-params :id])]
+    {:status 200 :body (db/peer-get id)}))
+
+(defn peer-delete [request]
+  (let [id (get-in request [:path-params :id])]
+    (db/peer-delete id)
+    {:status 204}))
+
 (def common-interceptors [(body-params/body-params) http/json-body])
 
 (def routes
-  #{["/greet" :get (conj common-interceptors `hello-world)]})
+  #{["/greet"     :get    (conj common-interceptors `hello-world)]
+    ["/peers"     :get    (conj common-interceptors `peer-list)]
+    ["/peers"     :post   (conj common-interceptors `peer-add)]
+    ["/peers/:id" :get    (conj common-interceptors `peer-get)]
+    ["/peers/:id" :delete (conj common-interceptors `peer-delete)]})
 
 (def service {:env                 :prod
               ::http/routes        routes
