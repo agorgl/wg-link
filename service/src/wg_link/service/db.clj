@@ -38,10 +38,12 @@
        (map #(select-keys % [:id :name :address]))))
 
 (defn peer-add [nm]
-  (let [ip (allocate-peer-ip)]
+  (let [ip (allocate-peer-ip)
+        np (new-peer nm ip)]
     (swap! db update-in [:peers]
            (fn [peers]
-             (sort-by :address (conj peers (new-peer nm ip)))))))
+             (sort-by :address (conj peers np))))
+    np))
 
 (defn peer-get [id]
   (->> (:peers @db)

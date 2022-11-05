@@ -14,9 +14,10 @@
   {:status 200 :body (db/peer-list)})
 
 (defn peer-add [request]
-  (let [nm (get-in request [:json-params :name])]
-    (db/peer-add nm)
-    {:status 201}))
+  (let [nm (get-in request [:json-params :name])
+        id (:id (db/peer-add nm))
+        loc (route/url-for ::peer-get :params {:id id})]
+    {:status 201 :headers {"Location" loc}}))
 
 (defn peer-get [request]
   (let [id (get-in request [:path-params :id])]
