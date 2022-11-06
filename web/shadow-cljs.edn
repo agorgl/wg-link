@@ -31,7 +31,8 @@
    {:build-hooks
     [(teknql.tailwind/start-watch!)]
     :compiler-options
-    {:closure-defines {}}}
+    {:closure-defines
+     {wg-link.web.config/API_URL "http://localhost:8080"}}}
 
    :release
    {:build-hooks
