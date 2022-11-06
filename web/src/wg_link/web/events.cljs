@@ -1,7 +1,10 @@
 (ns wg-link.web.events
   (:require
+   [clojure.set :refer [rename-keys]]
    [re-frame.core :as re-frame]
-   [wg-link.web.db :as db]))
+   [ajax.core :as ajax]
+   [wg-link.web.db :as db]
+   [wg-link.web.config :as conf]))
 
 (defn- index-of
   [pred coll]
@@ -19,10 +22,27 @@
        (first)
        (apply #(str %1 (inc (js/parseInt %2))))))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
  ::initialize-db
- (fn [_ _]
-   db/default-db))
+ (fn [_]
+   {:db db/default-db
+    :dispatch [::fetch-peers]}))
+
+(re-frame/reg-event-fx
+ ::fetch-peers
+ (fn [_]
+   {:http-xhrio {:method          :get
+                 :uri             (str conf/api-url "/peers")
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success      [::peers-fetched]}}))
+
+(re-frame/reg-event-db
+ ::peers-fetched
+ (fn [db [_ peers]]
+   (assoc db :peers (mapv #(-> %
+                               (select-keys [:name :address])
+                               (rename-keys {:address :ip})
+                               (merge {:enabled true})) peers))))
 
 (re-frame/reg-event-db
  ::add-peer
