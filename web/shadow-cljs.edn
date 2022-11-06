@@ -5,6 +5,7 @@
  :dependencies
  [[reagent "1.1.1"]
   [re-frame "1.3.0"]
+  [day8.re-frame/http-fx "0.2.4"]
   [binaryage/devtools "1.0.6"]
   [com.teknql/shadow-cljs-tailwind-jit "1.0.0"]]
 

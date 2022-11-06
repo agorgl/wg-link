@@ -2,6 +2,7 @@
   (:require
    [reagent.dom :as rdom]
    [re-frame.core :as re-frame]
+   [day8.re-frame.http-fx]
    [wg-link.web.events :as events]
    [wg-link.web.views :as views]
    [wg-link.web.config :as config]))
