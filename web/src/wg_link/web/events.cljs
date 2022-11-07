@@ -10,18 +10,6 @@
   [pred coll]
   (first (keep-indexed #(when (pred %2) %1) coll)))
 
-(defn- allocate-ip [ips]
-  (->> ips
-       (map #(re-matches #"(\d+\.\d+\.\d+\.)(\d)" %))
-       (map rest)
-       (sort-by second)
-       (#(concat [`(~(first (first %)) "0")] %))
-       (partition 2 1 [nil])
-       (filter (fn [[[_ a] [_ b]]] (not= 1 (- b a))))
-       (first)
-       (first)
-       (apply #(str %1 (inc (js/parseInt %2))))))
-
 (def id-gen (atom 0))
 
 (defn next-id []
@@ -50,18 +38,29 @@
                                (rename-keys {:address :ip})
                                (merge {:enabled true})) peers))))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
  ::add-peer
- (fn [db [_ name]]
-   (let [peer-ips (map :ip (:peers db))
-         ip (allocate-ip peer-ips)]
-     (update-in db [:peers] #(->> %
-                                  (concat [{:id (next-id)
-                                            :name name
-                                            :ip ip
-                                            :enabled true}])
-                                  (sort-by :ip)
-                                  (vec))))))
+ (fn [{:keys [:db]} [_ name]]
+   (let [next-id (next-id)]
+     {:db (update-in db [:peers] #(->> %
+                                       (concat [{:id next-id
+                                                 :name name
+                                                 :ip "<pending>"
+                                                 :enabled true}])
+                                       (sort-by :ip)
+                                       (vec)))
+      :http-xhrio {:method          :post
+                   :uri             (str conf/api-url "/peers")
+                   :params          {:name name}
+                   :format          (ajax/json-request-format)
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [::peer-added next-id]}})))
+
+(re-frame/reg-event-db
+ ::peer-added
+ (fn [db [_ id peer]]
+   (let [pidx (index-of #(= (:id %) id) (get-in db [:peers]))]
+     (update-in db [:peers pidx] assoc :id (:id peer) :ip (:address peer)))))
 
 (re-frame/reg-event-db
  ::update-peer-name

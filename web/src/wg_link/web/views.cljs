@@ -147,24 +147,23 @@
                  (when @edit
                    (reset! edit false)
                    (re-frame/dispatch [::events/update-peer-ip id @value])))]
-    (fn []
-      [:div {:class "text-gray-400 text-xs"}
-       [:span {:class "group space-x-1"
-               :data-edit @edit}
-        [:input {:class "group-data-[edit=false]:hidden rounded border-2 border-gray-100 focus:border-gray-200 outline-none w-20 text-black"
-                 :value @value
-                 :on-change #(reset! value (-> % .-target .-value))
-                 :on-key-press #(when (= (.-key %) "Enter") (submit))
-                 :on-blur submit
-                 :ref #(reset! input %)}]
-        [:span {:class "group-data-[edit=true]:hidden inline-block border-t-2 border-b-2 border-transparent"}
-         @value]
-        [:span {:class "cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                :on-click (fn []
-                            (if (swap! edit not)
-                              (js/setTimeout #(-> @input .focus) 1)
-                              (submit)))}
-         [icon-edit]]]])))
+    [:div {:class "text-gray-400 text-xs"}
+     [:span {:class "group space-x-1"
+             :data-edit @edit}
+      [:input {:class "group-data-[edit=false]:hidden rounded border-2 border-gray-100 focus:border-gray-200 outline-none w-20 text-black"
+               :value @value
+               :on-change #(reset! value (-> % .-target .-value))
+               :on-key-press #(when (= (.-key %) "Enter") (submit))
+               :on-blur submit
+               :ref #(reset! input %)}]
+      [:span {:class "group-data-[edit=true]:hidden inline-block border-t-2 border-b-2 border-transparent"}
+       @value]
+      [:span {:class "cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+              :on-click (fn []
+                          (if (swap! edit not)
+                            (js/setTimeout #(-> @input .focus) 1)
+                            (submit)))}
+       [icon-edit]]]]))
 
 (defn peer [{:keys [id name ip] :as p}]
   [:div {:class "relative overflow-hidden border-b border-gray-100 border-solid"}
