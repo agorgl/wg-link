@@ -72,12 +72,12 @@
            :d "M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
            :clip-rule "evenodd"}]])
 
-(defn peer-controls [{:keys [name enabled]}]
+(defn peer-controls [{:keys [id enabled]}]
   [:div {:class "text-gray-400 space-x-1"}
    [:div {:title (str (if enabled "Disable" "Enable") " Peer")
           :class "inline-block align-middle rounded-full w-10 h-6 mr-1 data-[enabled=true]:bg-red-800 data-[enabled=false]:bg-gray-200 cursor-pointer data-[enabled=true]:hover:bg-red-700 data-[enabled=false]:hover:bg-gray-300 transition-all group"
           :data-enabled enabled
-          :on-click #(re-frame/dispatch [::events/enable-peer name (not enabled)])}
+          :on-click #(re-frame/dispatch [::events/enable-peer id (not enabled)])}
     [:div {:class "rounded-full w-4 h-4 m-1 group-data-[enabled=true]:ml-5 bg-white"}]]
    [:button {:title "Show QR Code"
              :class "align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"}
@@ -89,7 +89,7 @@
     [icon-download]]
    [:button {:title "Delete Peer"
              :class "align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"
-             :on-click #(re-frame/dispatch [::events/delete-peer name])}
+             :on-click #(re-frame/dispatch [::events/delete-peer id])}
     [icon-delete]]])
 
 (defn icon-avatar []
@@ -112,14 +112,14 @@
            :stroke-width "2"
            :d "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"}]])
 
-(defn peer-name [name]
+(defn peer-name [id name]
   (let [edit (reagent/atom false)
         value (reagent/atom name)
         input (atom nil)
         submit (fn []
                  (when @edit
                    (reset! edit false)
-                   (re-frame/dispatch [::events/update-peer-name name @value])))]
+                   (re-frame/dispatch [::events/update-peer-name id @value])))]
     (fn []
       [:div {:title "Created on Oct 28, 2022, 8:48 PM"
              :class "text-gray-700 group space-x-1"
@@ -139,14 +139,14 @@
                              (submit)))}
         [icon-edit]]])))
 
-(defn peer-ip [name ip]
+(defn peer-ip [id ip]
   (let [edit (reagent/atom false)
         value (reagent/atom ip)
         input (atom nil)
         submit (fn []
                  (when @edit
                    (reset! edit false)
-                   (re-frame/dispatch [::events/update-peer-ip name @value])))]
+                   (re-frame/dispatch [::events/update-peer-ip id @value])))]
     (fn []
       [:div {:class "text-gray-400 text-xs"}
        [:span {:class "group space-x-1"
@@ -166,14 +166,14 @@
                               (submit)))}
          [icon-edit]]]])))
 
-(defn peer [{:keys [name ip] :as p}]
+(defn peer [{:keys [id name ip] :as p}]
   [:div {:class "relative overflow-hidden border-b border-gray-100 border-solid"}
    [:div {:class "relative p-5 z-10 flex flex-row"}
     [:div {:class "h-10 w-10 my-auto mr-4 rounded-full bg-gray-50 relative"}
      [icon-avatar]]
     [:div {:class "flex-grow"}
-     [peer-name name]
-     [peer-ip name ip]]
+     [peer-name id name]
+     [peer-ip id ip]]
     [:div {:class "text-right my-auto"}
      [peer-controls p]]]])
 

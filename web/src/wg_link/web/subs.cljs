@@ -10,9 +10,9 @@
 (re-frame/reg-sub
  ::peer-ids
  (fn [db]
-   (map :name (:peers db))))
+   (map :id (:peers db))))
 
 (re-frame/reg-sub
  ::peer
  (fn [db [_ id]]
-   (filter #(= (:name %) id) (:peers db))))
+   (filter #(= (:id %) id) (:peers db))))

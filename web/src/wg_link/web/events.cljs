@@ -22,6 +22,11 @@
        (first)
        (apply #(str %1 (inc (js/parseInt %2))))))
 
+(def id-gen (atom 0))
+
+(defn next-id []
+  (swap! id-gen inc))
+
 (re-frame/reg-event-fx
  ::initialize-db
  (fn [_]
@@ -39,18 +44,20 @@
 (re-frame/reg-event-db
  ::peers-fetched
  (fn [db [_ peers]]
+   (reset! id-gen (or (reduce max (map :id peers)) 0))
    (assoc db :peers (mapv #(-> %
-                               (select-keys [:name :address])
+                               (select-keys [:id :name :address])
                                (rename-keys {:address :ip})
                                (merge {:enabled true})) peers))))
 
 (re-frame/reg-event-db
  ::add-peer
- (fn [db [_ peer]]
+ (fn [db [_ name]]
    (let [peer-ips (map :ip (:peers db))
          ip (allocate-ip peer-ips)]
      (update-in db [:peers] #(->> %
-                                  (concat [{:name peer
+                                  (concat [{:id (next-id)
+                                            :name name
                                             :ip ip
                                             :enabled true}])
                                   (sort-by :ip)
@@ -58,25 +65,25 @@
 
 (re-frame/reg-event-db
  ::update-peer-name
- (fn [db [_ peer name]]
-   (let [pidx (index-of #(= (:name %) peer) (get-in db [:peers]))]
+ (fn [db [_ id name]]
+   (let [pidx (index-of #(= (:id %) id) (get-in db [:peers]))]
      (assoc-in db [:peers pidx :name] name))))
 
 (re-frame/reg-event-db
  ::update-peer-ip
- (fn [db [_ peer ip]]
-   (let [pidx (index-of #(= (:name %) peer) (get-in db [:peers]))]
+ (fn [db [_ id ip]]
+   (let [pidx (index-of #(= (:id %) id) (get-in db [:peers]))]
      (assoc-in db [:peers pidx :ip] ip))))
 
 (re-frame/reg-event-db
  ::enable-peer
- (fn [db [_ peer enable]]
-   (let [pidx (index-of #(= (:name %) peer) (get-in db [:peers]))]
+ (fn [db [_ id enable]]
+   (let [pidx (index-of #(= (:id %) id) (get-in db [:peers]))]
      (assoc-in db [:peers pidx :enabled] enable))))
 
 (re-frame/reg-event-db
  ::delete-peer
- (fn [db [_ peer]]
+ (fn [db [_ id]]
    (update-in db [:peers]
               (fn [peers]
-                (vec (remove #(= (:name %) peer) peers))))))
+                (vec (remove #(= (:id %) id) peers))))))
