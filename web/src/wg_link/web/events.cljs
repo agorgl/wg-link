@@ -80,9 +80,19 @@
    (let [pidx (index-of #(= (:id %) id) (get-in db [:peers]))]
      (assoc-in db [:peers pidx :enabled] enable))))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
  ::delete-peer
- (fn [db [_ id]]
-   (update-in db [:peers]
-              (fn [peers]
-                (vec (remove #(= (:id %) id) peers))))))
+ (fn [{:keys [:db]} [_ id]]
+   {:db (update-in db [:peers]
+                   (fn [peers]
+                     (vec (remove #(= (:id %) id) peers))))
+    :http-xhrio {:method          :delete
+                 :uri             (str conf/api-url "/peers/" id)
+                 :format          (ajax/json-request-format)
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success      [::peer-deleted]}}))
+
+(re-frame/reg-event-db
+ ::peer-deleted
+ (fn [db _]
+   db))
