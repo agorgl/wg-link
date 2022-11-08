@@ -56,6 +56,7 @@
               ::http/routes        routes
               ::http/resource-path "/public"
               ::http/type          :jetty
+              ::http/host          "0.0.0.0"
               ::http/port          8080})
 
 (defn run-dev
