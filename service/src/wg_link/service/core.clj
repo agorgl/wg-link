@@ -10,18 +10,27 @@
   (let [name (get-in request [:params :name] "World")]
     {:status 200 :body {:message (str "Hello " name "!")}}))
 
+(def peer-keys [:id :name :address])
+
 (defn peer-list [_]
   {:status 200 :body (db/peer-list)})
 
 (defn peer-add [request]
   (let [nm (get-in request [:json-params :name])
-        peer (select-keys (db/peer-add nm) [:id :name :address])
+        peer (-> (db/peer-add nm)
+                 (select-keys peer-keys))
         loc (route/url-for ::peer-get :params {:id (:id peer)})]
     {:status 201 :body peer :headers {"Location" loc}}))
 
 (defn peer-get [request]
   (let [id (get-in request [:path-params :id])]
     {:status 200 :body (db/peer-get id)}))
+
+(defn peer-update [request]
+  (let [id (get-in request [:path-params :id])
+        peer (-> (db/peer-update id (:json-params request))
+                 (select-keys peer-keys))]
+    {:status 200 :body peer}))
 
 (defn peer-conf [request]
   (let [id (get-in request [:path-params :id])]
@@ -39,6 +48,7 @@
     ["/peers"          :get    (conj common-interceptors `peer-list)]
     ["/peers"          :post   (conj common-interceptors `peer-add)]
     ["/peers/:id"      :get    (conj common-interceptors `peer-get)]
+    ["/peers/:id"      :patch  (conj common-interceptors `peer-update)]
     ["/peers/:id/conf" :get    (conj common-interceptors `peer-conf)]
     ["/peers/:id"      :delete (conj common-interceptors `peer-delete)]})
 

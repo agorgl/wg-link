@@ -2,6 +2,12 @@
   (:require [wg-link.service.cidr :as cidr]
             [wg-link.service.wireguard :as wg]))
 
+(defn- index-of [pred coll]
+  (first (keep-indexed #(when (pred %2) %1) coll)))
+
+(defn- merge-if-exists [m1 m2]
+  (merge m1 (select-keys m2 (keys m1))))
+
 (defn- new-network [nm net]
   (let [[private-key public-key] (wg/keypair-gen)]
     {:name nm
@@ -55,6 +61,12 @@
   (->> (:peers @db)
        (filter #(= (str (:id %)) id))
        (first)))
+
+(defn peer-update [id peer]
+  (let [pidx (index-of #(= (str (:id %)) id) (get-in @db [:peers]))
+        up (merge-if-exists (get-in @db [:peers pidx]) peer)]
+    (swap! db assoc-in [:peers pidx] up)
+    up))
 
 (defn peer-conf [id]
   (->> (:peers @db)
