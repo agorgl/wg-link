@@ -32,7 +32,8 @@
      :address addr
      :private-key private-key
      :preshared-key shared-key
-     :public-key public-key}))
+     :public-key public-key
+     :enabled true}))
 
 (def db (atom (new-network "wg0" "10.5.5.0/24")))
 
@@ -45,7 +46,7 @@
 
 (defn peer-list []
   (->> (:peers @db)
-       (map #(select-keys % [:id :name :address]))))
+       (map #(select-keys % [:id :name :address :enabled]))))
 
 (defn peer-add [nm]
   (let [ip (allocate-peer-ip)

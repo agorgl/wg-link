@@ -10,7 +10,7 @@
   (let [name (get-in request [:params :name] "World")]
     {:status 200 :body {:message (str "Hello " name "!")}}))
 
-(def peer-keys [:id :name :address])
+(def peer-keys [:id :name :address :enabled])
 
 (defn peer-list [_]
   {:status 200 :body (db/peer-list)})

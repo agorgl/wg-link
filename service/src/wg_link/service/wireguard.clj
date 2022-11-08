@@ -56,9 +56,10 @@
         peers)))
 
 (defn server-conf [server peers]
-  (->> (server-sections server peers)
-       (map (fn [[k v]] (ini-section k v)))
-       (str/join "\n\n")))
+  (let [enabled-peers (filter :enabled peers)]
+    (->> (server-sections server enabled-peers)
+         (map (fn [[k v]] (ini-section k v)))
+         (str/join "\n\n"))))
 
 (defn update-conf [server peers]
   (->> (server-conf server peers)
