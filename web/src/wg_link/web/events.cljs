@@ -34,9 +34,8 @@
  (fn [db [_ peers]]
    (reset! id-gen (or (reduce max (map :id peers)) 0))
    (assoc db :peers (mapv #(-> %
-                               (select-keys [:id :name :address])
-                               (rename-keys {:address :ip})
-                               (merge {:enabled true})) peers))))
+                               (select-keys [:id :name :address :enabled])
+                               (rename-keys {:address :ip})) peers))))
 
 (re-frame/reg-event-fx
  ::add-peer
@@ -62,23 +61,22 @@
    (let [pidx (index-of #(= (:id %) id) (get-in db [:peers]))]
      (update-in db [:peers pidx] assoc :id (:id peer) :ip (:address peer)))))
 
-(re-frame/reg-event-db
- ::update-peer-name
- (fn [db [_ id name]]
+(re-frame/reg-event-fx
+ ::update-peer
+ (fn [{:keys [:db]} [_ id params]]
    (let [pidx (index-of #(= (:id %) id) (get-in db [:peers]))]
-     (assoc-in db [:peers pidx :name] name))))
+     {:db (update-in db [:peers pidx] merge params)
+      :http-xhrio {:method          :patch
+                   :uri             (str conf/api-url "/peers/" id)
+                   :params          (rename-keys params {:ip :address})
+                   :format          (ajax/json-request-format)
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [::peer-updated]}})))
 
 (re-frame/reg-event-db
- ::update-peer-ip
- (fn [db [_ id ip]]
-   (let [pidx (index-of #(= (:id %) id) (get-in db [:peers]))]
-     (assoc-in db [:peers pidx :ip] ip))))
-
-(re-frame/reg-event-db
- ::enable-peer
- (fn [db [_ id enable]]
-   (let [pidx (index-of #(= (:id %) id) (get-in db [:peers]))]
-     (assoc-in db [:peers pidx :enabled] enable))))
+ ::peer-updated
+ (fn [db _]
+   db))
 
 (re-frame/reg-event-fx
  ::delete-peer

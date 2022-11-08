@@ -78,7 +78,7 @@
    [:div {:title (str (if enabled "Disable" "Enable") " Peer")
           :class "inline-block align-middle rounded-full w-10 h-6 mr-1 data-[enabled=true]:bg-red-800 data-[enabled=false]:bg-gray-200 cursor-pointer data-[enabled=true]:hover:bg-red-700 data-[enabled=false]:hover:bg-gray-300 transition-all group"
           :data-enabled enabled
-          :on-click #(re-frame/dispatch [::events/enable-peer id (not enabled)])}
+          :on-click #(re-frame/dispatch [::events/update-peer id {:enabled (not enabled)}])}
     [:div {:class "rounded-full w-4 h-4 m-1 group-data-[enabled=true]:ml-5 bg-white"}]]
    [:button {:title "Show QR Code"
              :class "align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"}
@@ -120,7 +120,7 @@
         submit (fn []
                  (when @edit
                    (reset! edit false)
-                   (re-frame/dispatch [::events/update-peer-name id @value])))]
+                   (re-frame/dispatch [::events/update-peer id {:name @value}])))]
     (fn []
       [:div {:title "Created on Oct 28, 2022, 8:48 PM"
              :class "text-gray-700 group space-x-1"
@@ -147,7 +147,7 @@
         submit (fn []
                  (when @edit
                    (reset! edit false)
-                   (re-frame/dispatch [::events/update-peer-ip id @value])))]
+                   (re-frame/dispatch [::events/update-peer id {:ip @value}])))]
     [:div {:class "text-gray-400 text-xs"}
      [:span {:class "group space-x-1"
              :data-edit @edit}
