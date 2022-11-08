@@ -1,0 +1,33 @@
+FROM clojure:tools-deps AS builder
+WORKDIR /usr/src/app
+COPY service .
+RUN clojure -T:build uber :uber-file \"target/app.jar\"
+
+FROM ghcr.io/graalvm/native-image:latest AS native
+WORKDIR /usr/src/app
+COPY --from=builder /usr/src/app/target/app.jar /usr/src/app/app.jar
+RUN native-image -cp app.jar -jar app.jar \
+       -H:Name=app \
+       -H:+ReportExceptionStackTraces \
+       -H:CCompilerOption=-pipe \
+       -J-Dclojure.spec.skip.macros=true \
+       -J-Dclojure.compiler.direct-linking=true \
+       -J-Xmx3G \
+       -Dio.pedestal.log.defaultMetricsRecorder=nil \
+       --initialize-at-build-time \
+       --enable-http \
+       --enable-https \
+       --enable-url-protocols=http,https \
+       --enable-all-security-services \
+       --no-fallback --no-server \
+       --report-unsupported-elements-at-runtime \
+       --allow-incomplete-classpath \
+       --native-image-info \
+       --static \
+       --verbose
+
+FROM alpine AS runner
+RUN apk add --update-cache wireguard-tools
+COPY --from=native /usr/src/app/app /
+EXPOSE 8080
+CMD ["/app"]
