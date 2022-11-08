@@ -46,7 +46,9 @@
         np (new-peer nm ip)]
     (swap! db update-in [:peers]
            (fn [peers]
-             (sort-by :address (conj peers np))))
+             (->> (conj peers np)
+                  (sort-by :address)
+                  (vec))))
     np))
 
 (defn peer-get [id]
@@ -63,4 +65,7 @@
 (defn peer-delete [id]
   (swap! db update-in [:peers]
          (fn [peers]
-           (remove #(= (str (:id %)) id) peers))))
+           (->> peers
+                (remove #(= (str (:id %)) id))
+                (sort-by :address)
+                (vec)))))
