@@ -85,4 +85,5 @@
   "The entry point"
   [& _]
   (println "\nCreating your server...")
+  (db/init-network "wg0" "10.5.5.0/24" "somedomain.com" 56000)
   (http/start runnable-service))

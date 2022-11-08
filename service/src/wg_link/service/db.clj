@@ -8,20 +8,20 @@
 (defn- merge-if-exists [m1 m2]
   (merge m1 (select-keys m2 (keys m1))))
 
-(defn- new-network [nm net]
+(defn- new-network [nm net domain port]
   (let [[private-key public-key] (wg/keypair-gen)]
     {:name nm
      :network net
      :server {:address (first (cidr/available-ips net []))
               :private-key private-key
               :public-key public-key
-              :domain "somedomain.com"
-              :listen-port 56000}
+              :domain domain
+              :listen-port port}
      :peers []}))
 
 (def peer-id-gen (atom 0))
 
-(defn next-peer-id []
+(defn- next-peer-id []
   (swap! peer-id-gen inc))
 
 (defn- new-peer [nm addr]
@@ -35,7 +35,7 @@
      :public-key public-key
      :enabled true}))
 
-(def db (atom (new-network "wg0" "10.5.5.0/24")))
+(def db (atom nil))
 
 (defn- allocate-peer-ip []
   (let [network (:network @db)
@@ -43,6 +43,9 @@
         server-ip (get-in @db [:server :address])
         occupied-ips (conj peer-ips server-ip)]
     (first (cidr/available-ips network occupied-ips))))
+
+(defn init-network [nm net domain port]
+  (reset! db (new-network nm net domain port)))
 
 (defn peer-list []
   (->> (:peers @db)
