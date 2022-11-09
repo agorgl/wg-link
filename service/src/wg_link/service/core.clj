@@ -53,12 +53,13 @@
     ["/peers/:id/conf" :get    (conj common-interceptors `peer-conf)]
     ["/peers/:id"      :delete (conj common-interceptors `peer-delete)]})
 
-(def service {:env                 :prod
-              ::http/routes        routes
-              ::http/resource-path "/public"
-              ::http/type          :jetty
-              ::http/host          "0.0.0.0"
-              ::http/port          8080})
+(def service {:env                  :prod
+              ::http/routes         routes
+              ::http/resource-path  "/public"
+              ::http/secure-headers {:content-security-policy-settings {:object-src "'none'"}}
+              ::http/type           :jetty
+              ::http/host           "0.0.0.0"
+              ::http/port           8080})
 
 (defn run-dev
   "The entry point for dev"
