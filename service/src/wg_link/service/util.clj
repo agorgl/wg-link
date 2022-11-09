@@ -1,5 +1,16 @@
 (ns wg-link.service.util
-  (:require [ring.util.response :as response]))
+  (:require [io.pedestal.http :as http]
+            [io.pedestal.http.ring-middlewares :as middleware]
+            [io.pedestal.interceptor.helpers :as interceptor]
+            [ring.util.response :as response]
+            [ring.util.mime-type :as mime])
+  (:import java.io.File))
+
+(defn insert-at [coll f x]
+  (->> coll
+       (partition-by f)
+       (apply (fn [a b c] (concat a (conj b x) c)))
+       (vec)))
 
 (defmethod response/resource-data :resource
   [^java.net.URL url]
@@ -10,3 +21,18 @@
       {:content        (.getInputStream resource)
        :content-length len
        :last-modified  (#'ring.util.response/connection-last-modified resource)})))
+
+(def file-content-type-interceptor
+  (interceptor/after
+   ::file-content-type-interceptor
+   (fn [ctx]
+     (let [resp (:response ctx)]
+       (if-let [mime-type (or (get-in ctx [:response :headers "Content-Type"])
+                              (when (instance? File (:body resp))
+                                (mime/ext-mime-type (.getAbsolutePath ^File (:body resp)))))]
+         (assoc-in ctx [:response :headers "Content-Type"] mime-type)
+         ctx)))))
+
+(defn extra-interceptors [service-map]
+  (update-in service-map [::http/interceptors]
+             insert-at #(= (:name %) ::middleware/content-type-interceptor) file-content-type-interceptor))

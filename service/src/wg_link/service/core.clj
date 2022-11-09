@@ -4,7 +4,7 @@
             [io.pedestal.http.route :as route]
             [io.pedestal.http.body-params :as body-params]
             [wg-link.service.db :as db]
-            [wg-link.service.util]))
+            [wg-link.service.util :as util]))
 
 (defn hello-world
   [request]
@@ -61,6 +61,11 @@
               ::http/host           "0.0.0.0"
               ::http/port           8080})
 
+(defn global-interceptors [service-map]
+  (-> service-map
+      http/default-interceptors
+      util/extra-interceptors))
+
 (defn run-dev
   "The entry point for dev"
   [& _]
@@ -75,14 +80,14 @@
               ;; All origins are allowed in dev mode
               ::http/allowed-origins {:creds true :allowed-origins (constantly true)}})
       ;; Wire up interceptor chains
-      http/default-interceptors
+      global-interceptors
       http/dev-interceptors
       http/create-server
       http/start))
 
 ;; This is an adapted service map, that can be started and stopped
 ;; From the REPL you can call http/start and http/stop on this service
-(defonce runnable-service (http/create-server service))
+(defonce runnable-service (http/create-server (-> service global-interceptors)))
 
 (defn -main
   "The entry point"
