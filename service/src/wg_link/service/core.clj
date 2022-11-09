@@ -56,6 +56,7 @@
 (def service {:env                  :prod
               ::http/routes         routes
               ::http/resource-path  "/public"
+              ::http/file-path      "resources/public/"
               ::http/secure-headers {:content-security-policy-settings {:object-src "'none'"}}
               ::http/type           :jetty
               ::http/host           "0.0.0.0"
