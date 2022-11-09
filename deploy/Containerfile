@@ -14,10 +14,13 @@ RUN npm run release
 FROM ghcr.io/graalvm/native-image:latest AS native
 WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/target/app.jar /usr/src/app/app.jar
-RUN native-image -cp app.jar -jar app.jar \
+COPY --from=content /usr/src/app/resources /usr/src/app/resources
+RUN native-image -cp app.jar:resources/ -jar app.jar \
        -H:Name=app \
        -H:+ReportExceptionStackTraces \
        -H:CCompilerOption=-pipe \
+       -H:IncludeResources=public/.* \
+       -H:Log=registerResource:3 \
        -J-Dclojure.spec.skip.macros=true \
        -J-Dclojure.compiler.direct-linking=true \
        -J-Xmx3G \
@@ -37,5 +40,6 @@ RUN native-image -cp app.jar -jar app.jar \
 FROM alpine AS runner
 RUN apk add --update-cache wireguard-tools
 COPY --from=native /usr/src/app/app /
+COPY --from=content /usr/src/app/resources /resources
 EXPOSE 8080
 CMD ["/app"]
