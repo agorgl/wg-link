@@ -44,8 +44,16 @@
         occupied-ips (conj peer-ips server-ip)]
     (first (cidr/available-ips network occupied-ips))))
 
+(defn update-db! [f]
+  (let [db (f db)]
+    (wg/update-conf (merge (:server db) (select-keys db [:name :network]))
+                    (:peers db))
+    (wg/reload-interface (:name db))))
+
 (defn init-network [nm net domain port]
-  (reset! db (new-network nm net domain port)))
+  (update-db!
+   (fn [db]
+     (reset! db (new-network nm net domain port)))))
 
 (defn peer-list []
   (->> (:peers @db)
@@ -54,11 +62,13 @@
 (defn peer-add [nm]
   (let [ip (allocate-peer-ip)
         np (new-peer nm ip)]
-    (swap! db update-in [:peers]
-           (fn [peers]
-             (->> (conj peers np)
-                  (sort-by :address)
-                  (vec))))
+    (update-db!
+     (fn [db]
+       (swap! db update-in [:peers]
+              (fn [peers]
+                (->> (conj peers np)
+                     (sort-by :address)
+                     (vec))))))
     np))
 
 (defn peer-get [id]
@@ -69,7 +79,9 @@
 (defn peer-update [id peer]
   (let [pidx (index-of #(= (str (:id %)) id) (get-in @db [:peers]))
         up (merge-if-exists (get-in @db [:peers pidx]) peer)]
-    (swap! db assoc-in [:peers pidx] up)
+    (update-db!
+     (fn [db]
+       (swap! db assoc-in [:peers pidx] up)))
     up))
 
 (defn peer-conf [id]
@@ -79,9 +91,11 @@
        (wg/peer-conf (assoc (:server @db) :network (:network @db)))))
 
 (defn peer-delete [id]
-  (swap! db update-in [:peers]
-         (fn [peers]
-           (->> peers
-                (remove #(= (str (:id %)) id))
-                (sort-by :address)
-                (vec)))))
+  (update-db!
+   (fn [db]
+     (swap! db update-in [:peers]
+            (fn [peers]
+              (->> peers
+                   (remove #(= (str (:id %)) id))
+                   (sort-by :address)
+                   (vec)))))))
