@@ -26,6 +26,7 @@ RUN native-image -cp app.jar:resources/ -jar app.jar \
        -J-Xmx3G \
        -Dio.pedestal.log.defaultMetricsRecorder=nil \
        --initialize-at-build-time \
+       --install-exit-handlers \
        --enable-http \
        --enable-https \
        --enable-url-protocols=http,https \
