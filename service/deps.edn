@@ -1,4 +1,4 @@
-{:paths ["src" "resources"]
+{:paths ["src" "config" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.11.1"}
         io.pedestal/pedestal.service {:mvn/version "0.5.10"}
         io.pedestal/pedestal.jetty {:mvn/version "0.5.10"}
