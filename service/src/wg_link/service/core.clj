@@ -69,7 +69,7 @@
 (defn run-dev
   "The entry point for dev"
   [& _]
-  (println "\nCreating your [DEV] server...")
+  (println "Creating your [DEV] server...")
   (-> service ;; Start with production configuration
       (merge {:env :dev
               ;; Do not block thread that starts web server
@@ -92,6 +92,6 @@
 (defn -main
   "The entry point"
   [& _]
-  (println "\nCreating your server...")
+  (println "Creating your server...")
   (db/init-network "wg0" "10.5.5.0/24" "somedomain.com" 56000)
   (http/start runnable-service))
