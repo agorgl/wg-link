@@ -1,7 +1,7 @@
 FROM clojure:tools-deps AS builder
 WORKDIR /usr/src/app
 COPY service .
-RUN clojure -T:build uber :uber-file \"target/app.jar\"
+RUN clojure -T:build uber :uber-file '"target/app.jar"' :resource-dirs '["config" "resources"]'
 
 FROM clojure:tools-deps AS content
 RUN apt update -y && apt install -y nodejs npm
