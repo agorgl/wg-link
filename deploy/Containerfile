@@ -40,4 +40,4 @@ RUN apk add --update-cache wireguard-tools
 COPY --from=native /usr/src/app/app /
 COPY --from=content /usr/src/app/resources /resources
 EXPOSE 8080
-CMD ["/app"]
+ENTRYPOINT ["/app"]
