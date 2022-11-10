@@ -4,7 +4,8 @@
    [re-frame.core :as re-frame]
    [wg-link.web.subs :as subs]
    [wg-link.web.events :as events]
-   [wg-link.web.config :as conf]))
+   [wg-link.web.config :as conf]
+   ["qrcode" :as qr]))
 
 (defonce dialog (reagent/atom nil))
 
@@ -37,7 +38,7 @@
     [:br]
     [:br]
     [:button {:class "bg-red-800 text-white hover:bg-red-700 border-2 border-none py-2 px-4 rounded inline-flex items-center transition"
-              :on-click #(reset! dialog :new-peer)}
+              :on-click #(reset! dialog [:new-peer])}
      [icon-plus]
      [:span {:class "text-sm"}
       "New Peer"]]]])
@@ -81,7 +82,8 @@
           :on-click #(re-frame/dispatch [::events/update-peer id {:enabled (not enabled)}])}
     [:div {:class "rounded-full w-4 h-4 m-1 group-data-[enabled=true]:ml-5 bg-white"}]]
    [:button {:title "Show QR Code"
-             :class "align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"}
+             :class "align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"
+             :on-click #(reset! dialog [:qrcode "hello there"])}
     [icon-qr]]
    [:a {:href (str conf/api-url "/peers/" id "/conf")
         :download (str name ".conf")
@@ -194,7 +196,7 @@
       "Peers"]]
     [:div {:class "flex-shrink-0"}
      [:button {:class "hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition"
-               :on-click #(reset! dialog :new-peer)}
+               :on-click #(reset! dialog [:new-peer])}
       [icon-plus]
       [:span {:class "text-sm"}
        "New"]]]]
@@ -256,10 +258,32 @@
                     :on-click #(reset! dialog nil)}
            "Cancel"]]]]])))
 
+(defn icon-x []
+  [:svg {:xmlns "http://www.w3.org/2000/svg"
+         :fill "none"
+         :viewBox "0 0 24 24"
+         :stroke "currentColor"
+         :class "w-8"}
+   [:path {:stroke-linecap "round"
+           :stroke-linejoin "round"
+           :stroke-width "2"
+           :d "M6 18L18 6M6 6l12 12"}]])
+
+(defn qrcode-dialog [content]
+  (let [data (reagent/atom nil)]
+    (qr/toDataURL content (clj->js {:width "512"}) #(reset! data %2))
+    [:div {:class "bg-black bg-opacity-50 fixed top-0 right-0 left-0 bottom-0 flex items-center justify-center z-20"}
+     [:div {:class "bg-white rounded-md shadow-lg relative p-8"}
+      [:button {:class "absolute right-4 top-4 text-gray-600 hover:text-gray-800"
+                :on-click #(reset! dialog nil)}
+       [icon-x]]
+      [:img {:src @data}]]]))
+
 (defn dialogs []
   (when-let [dialog @dialog]
-    (case dialog
-      :new-peer [new-peer-dialog])))
+    (case (first dialog)
+      :new-peer [new-peer-dialog]
+      :qrcode (into [qrcode-dialog] (rest dialog)))))
 
 (defn app []
   [:div {:class "w-screen h-screen bg-gray-50 overflow-auto"}
