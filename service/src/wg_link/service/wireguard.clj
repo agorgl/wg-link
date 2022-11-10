@@ -1,7 +1,8 @@
 (ns wg-link.service.wireguard
   (:require [clojure.string :as str]
             [clojure.java.io :refer [make-parents]]
-            [clojure.java.shell :refer [sh]]))
+            [clojure.java.shell :refer [sh]]
+            [io.pedestal.log :as log]))
 
 (defn keypair-gen []
   (let [private-key (str/trim-newline (:out (sh "wg" "genkey")))
@@ -11,6 +12,14 @@
 (defn shared-key-gen []
   (let [shared-key (str/trim-newline (:out (sh "wg" "genpsk")))]
     shared-key))
+
+(defn reload-interface [nm]
+  (log/info :msg (str "Reloading interface " nm))
+  (let [down-out (:err (sh "wg-quick" "down" nm))
+        up-out (:err (sh "wg-quick" "up" nm))]
+    (doseq [m (concat (str/split-lines down-out)
+                      (str/split-lines up-out))]
+      (log/info :msg m))))
 
 (def special-mappings
   {:allowed-ips "AllowedIPs"})
