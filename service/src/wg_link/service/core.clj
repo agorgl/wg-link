@@ -1,6 +1,8 @@
 (ns wg-link.service.core
   (:gen-class) ; for -main method in uberjar
-  (:require [io.pedestal.http :as http]
+  (:require [clojure.string :as str]
+            [clojure.tools.cli :refer [parse-opts]]
+            [io.pedestal.http :as http]
             [io.pedestal.http.route :as route]
             [io.pedestal.http.body-params :as body-params]
             [wg-link.service.db :as db]
@@ -89,9 +91,48 @@
 ;; From the REPL you can call http/start and http/stop on this service
 (defonce runnable-service (http/create-server (-> service global-interceptors)))
 
+(def cli-options
+  [["-n" "--name NAME" "Network name"
+    :default "wg0"]
+   ["-c" "--cidr CIDR" "Network cidr"
+    :default "10.5.5.0/24"]
+   ["-r" "--hostname HOST" "Remote host"
+    :missing "Missing required HOST argument"]
+   ["-p" "--port PORT" "Port number"
+    :default 51820
+    :parse-fn #(Integer/parseInt %)
+    :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
+   ["-h" "--help"]])
+
+(defn usage [options-summary]
+  (->> ["Usage: wg-easy [options]"
+        ""
+        "Options:"
+        options-summary]
+       (str/join \newline)))
+
+(defn error-msg [errors]
+  (str "The following errors occurred while parsing your command:\n"
+       (str/join \newline errors)))
+
+(defn validate-args [args]
+  (let [{:keys [options errors summary]} (parse-opts args cli-options)]
+    (cond
+      (:help options) {:exit-message (usage summary) :ok? true}
+      errors          {:exit-message (error-msg errors)}
+      :else           {:options options})))
+
+(defn exit [status msg]
+  (println msg)
+  (System/exit status))
+
 (defn -main
   "The entry point"
-  [& _]
-  (println "Creating your server...")
-  (db/init-network "wg0" "10.5.5.0/24" "somedomain.com" 56000)
-  (http/start runnable-service))
+  [& args]
+  (let [{:keys [options exit-message ok?]} (validate-args args)]
+    (if exit-message
+      (exit (if ok? 0 1) exit-message)
+      (do
+        (println "Creating your server...")
+        (db/init-network (:name options) (:cidr options) (:host options) (:port options))
+        (http/start runnable-service)))))
