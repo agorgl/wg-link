@@ -1,5 +1,6 @@
 (ns wg-link.service.wireguard
   (:require [clojure.string :as str]
+            [clojure.java.io :refer [make-parents]]
             [clojure.java.shell :refer [sh]]))
 
 (defn keypair-gen []
@@ -62,5 +63,7 @@
          (str/join "\n\n"))))
 
 (defn update-conf [server peers]
-  (->> (server-conf server peers)
-       (spit "/etc/wireguard/" (:name server) ".conf")))
+  (let [conf-file (str "/etc/wireguard/" (:name server) ".conf")]
+    (make-parents conf-file)
+    (->> (server-conf server peers)
+         (spit conf-file))))
