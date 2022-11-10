@@ -14,13 +14,10 @@ RUN npm run release
 FROM ghcr.io/graalvm/native-image:latest AS native
 WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/target/app.jar /usr/src/app/app.jar
-COPY --from=content /usr/src/app/resources /usr/src/app/resources
-RUN native-image -cp app.jar:resources/ -jar app.jar \
+RUN native-image -cp app.jar -jar app.jar \
        -H:Name=app \
        -H:+ReportExceptionStackTraces \
        -H:CCompilerOption=-pipe \
-       -H:IncludeResources=public/.* \
-       -H:Log=registerResource:3 \
        -J-Dclojure.spec.skip.macros=true \
        -J-Dclojure.compiler.direct-linking=true \
        -J-Xmx3G \
