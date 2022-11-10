@@ -79,6 +79,20 @@
    db))
 
 (re-frame/reg-event-fx
+ ::fetch-peer-conf
+ (fn [_ [_ id f]]
+   {:http-xhrio {:method          :get
+                 :uri             (str conf/api-url "/peers/" id "/conf")
+                 :response-format (ajax/raw-response-format)
+                 :on-success      [::peer-conf-fetched f]}}))
+
+(re-frame/reg-event-db
+ ::peer-conf-fetched
+ (fn [db [_ f conf]]
+   (f conf)
+   db))
+
+(re-frame/reg-event-fx
  ::delete-peer
  (fn [{:keys [:db]} [_ id]]
    {:db (update-in db [:peers]

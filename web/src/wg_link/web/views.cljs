@@ -83,7 +83,7 @@
     [:div {:class "rounded-full w-4 h-4 m-1 group-data-[enabled=true]:ml-5 bg-white"}]]
    [:button {:title "Show QR Code"
              :class "align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"
-             :on-click #(reset! dialog [:qrcode "hello there"])}
+             :on-click #(re-frame/dispatch [::events/fetch-peer-conf id (fn [c] (reset! dialog [:qrcode c]))])}
     [icon-qr]]
    [:a {:href (str conf/api-url "/peers/" id "/conf")
         :download (str name ".conf")
