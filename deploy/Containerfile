@@ -11,7 +11,8 @@ RUN npm install
 COPY web .
 RUN npm run release
 
-FROM ghcr.io/graalvm/native-image:java11 AS native
+FROM ghcr.io/graalvm/graalvm-ce:ol9-java11 AS native
+RUN gu install native-image
 WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/target/app.jar /usr/src/app/app.jar
 RUN native-image -cp app.jar -jar app.jar \
