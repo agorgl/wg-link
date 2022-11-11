@@ -1,6 +1,9 @@
 (ns wg-link.service.db
-  (:require [wg-link.service.cidr :as cidr]
-            [wg-link.service.wireguard :as wg]))
+  (:require [clojure.java.io :as io]
+            [clojure.data.json :as json]
+            [wg-link.service.cidr :as cidr]
+            [wg-link.service.wireguard :as wg]
+            [io.pedestal.log :as log]))
 
 (defn- index-of [pred coll]
   (first (keep-indexed #(when (pred %2) %1) coll)))
@@ -44,16 +47,40 @@
         occupied-ips (conj peer-ips server-ip)]
     (first (cidr/available-ips network occupied-ips))))
 
-(defn update-db! [f]
+(defn db-file [nm]
+  (str "/etc/wireguard/" nm ".json"))
+
+(defn- load-db [nm]
+  (-> (db-file nm)
+      (slurp)
+      (json/read-str :key-fn keyword)))
+
+(defn- persist-db [db]
+  (let [nm (:name db)
+        db-file (db-file nm)]
+    (io/make-parents db-file)
+    (->> db
+         (json/write-str)
+         (spit db-file))))
+
+(defn- update-db! [f]
   (let [db (f db)]
+    (persist-db db)
     (wg/update-conf (merge (:server db) (select-keys db [:name :network]))
                     (:peers db))
     (wg/reload-interface (:name db))))
 
 (defn init-network [nm net domain port]
-  (update-db!
-   (fn [db]
-     (reset! db (new-network nm net domain port)))))
+  (let [db-file (db-file nm)
+        db-exists (.exists (io/as-file db-file))]
+    (update-db!
+     (fn [db]
+       (reset! db
+               (if db-exists
+                 (do
+                   (log/info :msg (str "Found database for " nm " loading..."))
+                   (load-db nm))
+                 (new-network nm net domain port)))))))
 
 (defn peer-list []
   (->> (:peers @db)
