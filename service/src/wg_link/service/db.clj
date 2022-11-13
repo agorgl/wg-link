@@ -43,7 +43,7 @@
     (first (cidr/available-ips network occupied-ips))))
 
 (defn db-file [nm]
-  (str "/etc/wireguard/" nm ".json"))
+  (str wg/conf-dir "/" nm ".json"))
 
 (defn- load-db [nm]
   (-> (db-file nm)

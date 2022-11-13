@@ -71,8 +71,10 @@
          (map (fn [[k v]] (ini-section k v)))
          (str/join "\n\n"))))
 
+(def conf-dir "/etc/wireguard")
+
 (defn update-conf [server peers]
-  (let [conf-file (str "/etc/wireguard/" (:name server) ".conf")]
+  (let [conf-file (str conf-dir "/" (:name server) ".conf")]
     (make-parents conf-file)
     (->> (server-conf server peers)
          (spit conf-file))))
