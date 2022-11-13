@@ -1,5 +1,6 @@
 (ns wg-link.web.views
   (:require
+   [clojure.string :as str]
    [reagent.core :as reagent]
    [re-frame.core :as re-frame]
    [wg-link.web.subs :as subs]
@@ -143,30 +144,13 @@
         [icon-edit]]])))
 
 (defn peer-ip [id ip]
-  (let [edit (reagent/atom false)
-        value (reagent/atom ip)
-        input (atom nil)
-        submit (fn []
-                 (when @edit
-                   (reset! edit false)
-                   (re-frame/dispatch [::events/update-peer id {:ip @value}])))]
-    [:div {:class "text-gray-400 text-xs"}
-     [:span {:class "group space-x-1"
-             :data-edit @edit}
-      [:input {:class "group-data-[edit=false]:hidden rounded border-2 border-gray-100 focus:border-gray-200 outline-none w-20 text-black"
-               :value @value
-               :on-change #(reset! value (-> % .-target .-value))
-               :on-key-press #(when (= (.-key %) "Enter") (submit))
-               :on-blur submit
-               :ref #(reset! input %)}]
-      [:span {:class "group-data-[edit=true]:hidden inline-block border-t-2 border-b-2 border-transparent"}
-       @value]
-      [:span {:class "cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-              :on-click (fn []
-                          (if (swap! edit not)
-                            (js/setTimeout #(-> @input .focus) 1)
-                            (submit)))}
-       [icon-edit]]]]))
+  [:div {:class "text-gray-400 text-xs"}
+   [:span {:class "group space-x-1"}
+    [:span {:class "inline-block border-t-2 border-b-2 border-transparent"}
+     ip]
+    [:span {:class "cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+            :on-click #(reset! dialog [:peer-ips id [ip]])}
+     [icon-edit]]]])
 
 (defn peer [{:keys [id name ip] :as p}]
   [:div {:class "relative overflow-hidden border-b border-gray-100 border-solid"}
@@ -258,6 +242,78 @@
                     :on-click #(reset! dialog nil)}
            "Cancel"]]]]])))
 
+(defn icon-x-small []
+  [:svg {:class "h-4 w-4"
+         :xmlns "http://www.w3.org/2000/svg"
+         :width "16"
+         :height "16"
+         :fill "currentColor"
+         :viewBox "0 0 16 16"}
+   [:path {:d "M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"}]])
+
+(defn ip-badge [ip on-remove]
+  [:span {:class "inline-flex items-center gap-1.5 py-1.5 pl-3 pr-2 rounded-full text-xs font-medium bg-red-100 text-red-800"}
+   ip
+   [:button {:type "button"
+             :class "flex-shrink-0 h-4 w-4 inline-flex items-center justify-center rounded-full text-red-600 hover:bg-red-200 hover:text-red-500 focus:outline-none focus:bg-red-200 focus:text-red-500"
+             :on-click on-remove}
+    [icon-x-small]]])
+
+(defn peer-ips-dialog [_ ips]
+  (let [nips (reagent/atom ips)
+        value (reagent/atom nil)
+        submit (fn []
+                 (reset! dialog nil))]
+    (fn []
+      [:div {:class "fixed z-10 inset-0 overflow-y-auto"}
+       [:div {:class "flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"}
+        [:div {:aria-hidden "true"
+               :class "fixed inset-0 transition-opacity"}
+         [:div {:class "absolute inset-0 bg-gray-500 opacity-75"}]]
+        [:span {:aria-hidden "true"
+                :class "hidden sm:inline-block sm:align-middle sm:h-screen"}]
+        [:div {:role "dialog"
+               :aria-modal "true"
+               :aria-labelledby "modal-headline"
+               :class "inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"}
+         [:div {:class "bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4"}
+          [:div {:class "sm:flex sm:items-start"}
+           [:div {:class "mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-800 sm:mx-0 sm:h-10 sm:w-10"}
+            [icon-plus-big]]
+           [:div {:class "flex-grow mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left"}
+            [:h3 {:id "modal-headline"
+                  :class "text-lg leading-6 font-medium text-gray-900"}
+             "Peer IPs"]
+            [:div {:class "mt-2"}
+             [:div {:class "text-sm text-gray-500"}
+              [:div {:class "flex rounded p-2 border-2 border-gray-100 focus:border-gray-200 outline-none w-full space-x-1"}
+               (for [ip @nips]
+                 ^{:key ip} [ip-badge ip #(swap! nips (fn [ips] (vec (remove #{ip} ips))))])
+               [:input {:type "text"
+                        :placeholder "Name"
+                        :class "flex-grow w-full ml-2 border-none outline-none"
+                        :value @value
+                        :on-change #(reset! value (-> % .-target .-value))
+                        :on-key-down #(when (and (= (.-key %) "Backspace")
+                                                 (empty? @value))
+                                        (swap! nips (fn [ips] (-> ips drop-last vec))))
+                        :on-key-press #(when (and (= (.-key %) "Enter")
+                                                  (not-empty @value)
+                                                  (not (some #{@value} @nips)))
+                                         (let [ip (str/trim @value)]
+                                           (swap! nips conj ip)
+                                           (reset! value nil)))}]]]]]]]
+         [:div {:class "bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"}
+          [:button {:type "button"
+                    :class "w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 disabled:bg-gray-200 enabled:bg-red-800 enabled:hover:bg-red-700 enabled:focus:outline-none text-base font-medium text-white sm:ml-3 sm:w-auto sm:text-sm disabled:cursor-not-allowed"
+                    :disabled (or (empty? @nips) (= @nips ips))
+                    :on-click submit}
+           "Update"]
+          [:button {:type "button"
+                    :class "mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                    :on-click #(reset! dialog nil)}
+           "Cancel"]]]]])))
+
 (defn icon-x []
   [:svg {:xmlns "http://www.w3.org/2000/svg"
          :fill "none"
@@ -283,6 +339,7 @@
   (when-let [dialog @dialog]
     (case (first dialog)
       :new-peer [new-peer-dialog]
+      :peer-ips (into [peer-ips-dialog] (rest dialog))
       :qrcode (into [qrcode-dialog] (rest dialog)))))
 
 (defn app []
