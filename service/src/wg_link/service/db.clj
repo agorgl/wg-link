@@ -1,15 +1,10 @@
 (ns wg-link.service.db
   (:require [clojure.java.io :as io]
             [clojure.data.json :as json]
+            [io.pedestal.log :as log]
             [wg-link.service.cidr :as cidr]
             [wg-link.service.wireguard :as wg]
-            [io.pedestal.log :as log]))
-
-(defn- index-of [pred coll]
-  (first (keep-indexed #(when (pred %2) %1) coll)))
-
-(defn- merge-if-exists [m1 m2]
-  (merge m1 (select-keys m2 (keys m1))))
+            [wg-link.service.util :refer [index-of merge-if-exists]]))
 
 (defn- new-network [nm net domain port]
   (let [[private-key public-key] (wg/keypair-gen)]

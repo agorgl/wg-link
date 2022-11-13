@@ -6,6 +6,12 @@
             [ring.util.mime-type :as mime])
   (:import java.io.File))
 
+(defn index-of [pred coll]
+  (first (keep-indexed #(when (pred %2) %1) coll)))
+
+(defn merge-if-exists [m1 m2]
+  (merge m1 (select-keys m2 (keys m1))))
+
 (defn insert-at [coll f x]
   (->> coll
        (partition-by f)
