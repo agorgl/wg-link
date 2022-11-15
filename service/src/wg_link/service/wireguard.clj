@@ -62,7 +62,7 @@
    (map (fn [peer]
           [:peer {:public-key (:public-key peer)
                   :preshared-key (:preshared-key peer)
-                  :allowed-ips (str (:address peer) "/32")}])
+                  :allowed-ips (into [(str (:address peer) "/32")] (:gateway-ips peer))}])
         peers)))
 
 (defn server-conf [server peers]

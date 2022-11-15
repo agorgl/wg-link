@@ -31,6 +31,7 @@
      :private-key private-key
      :preshared-key shared-key
      :public-key public-key
+     :gateway-ips []
      :enabled true}))
 
 (def db (atom nil))
@@ -79,7 +80,7 @@
 
 (defn peer-list []
   (->> (:peers @db)
-       (map #(select-keys % [:id :name :address :enabled]))))
+       (map #(select-keys % [:id :name :address :gateway-ips :enabled]))))
 
 (defn peer-add [nm]
   (let [ip (allocate-peer-ip)
