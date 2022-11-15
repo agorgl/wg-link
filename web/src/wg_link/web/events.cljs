@@ -34,7 +34,7 @@
  (fn [db [_ peers]]
    (reset! id-gen (or (reduce max (map :id peers)) 0))
    (assoc db :peers (mapv #(-> %
-                               (select-keys [:id :name :address :enabled])
+                               (select-keys [:id :name :address :gateway-ips :enabled])
                                (rename-keys {:address :ip})) peers))))
 
 (re-frame/reg-event-fx
@@ -45,6 +45,7 @@
                                        (concat [{:id next-id
                                                  :name name
                                                  :ip "<pending>"
+                                                 :gateway-ips []
                                                  :enabled true}])
                                        (sort-by :ip)
                                        (vec)))

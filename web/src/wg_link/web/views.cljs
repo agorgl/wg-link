@@ -143,23 +143,23 @@
                              (submit)))}
         [icon-edit]]])))
 
-(defn peer-ip [id ip]
+(defn peer-ips [id ips]
   [:div {:class "text-gray-400 text-xs"}
    [:span {:class "group space-x-1"}
     [:span {:class "inline-block border-t-2 border-b-2 border-transparent"}
-     ip]
+     (str/join ", " ips)]
     [:span {:class "cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-            :on-click #(reset! dialog [:peer-ips id [ip]])}
+            :on-click #(reset! dialog [:peer-ips id ips])}
      [icon-edit]]]])
 
-(defn peer [{:keys [id name ip] :as p}]
+(defn peer [{:keys [id name ip gateway-ips] :as p}]
   [:div {:class "relative overflow-hidden border-b border-gray-100 border-solid"}
    [:div {:class "relative p-5 z-10 flex flex-row"}
     [:div {:class "h-10 w-10 my-auto mr-4 rounded-full bg-gray-50 relative"}
      [icon-avatar]]
     [:div {:class "flex-grow"}
      [peer-name id name]
-     [peer-ip id ip]]
+     [peer-ips id (into [ip] gateway-ips)]]
     [:div {:class "text-right my-auto"}
      [peer-controls p]]]])
 
@@ -259,10 +259,11 @@
              :on-click on-remove}
     [icon-x-small]]])
 
-(defn peer-ips-dialog [_ ips]
+(defn peer-ips-dialog [id ips]
   (let [nips (reagent/atom ips)
         value (reagent/atom nil)
         submit (fn []
+                 (re-frame/dispatch [::events/update-peer id {:gateway-ips (rest @nips)}])
                  (reset! dialog nil))]
     (fn []
       [:div {:class "fixed z-10 inset-0 overflow-y-auto"}
