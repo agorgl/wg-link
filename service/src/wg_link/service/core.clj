@@ -96,7 +96,7 @@
     :default "wg0"]
    ["-c" "--cidr CIDR" "Network cidr"
     :default "10.5.5.0/24"]
-   ["-r" "--hostname HOST" "Remote host"
+   ["-r" "--host HOST" "Remote host"
     :missing "Missing required HOST argument"]
    ["-p" "--port PORT" "Port number"
     :default 51820
