@@ -56,7 +56,7 @@
         db-file (db-file nm)]
     (io/make-parents db-file)
     (->> db
-         (json/write-str)
+         (#(json/write-str % :indent true :escape-slash false))
          (spit db-file))))
 
 (defn- update-db! [f]
