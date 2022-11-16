@@ -6,11 +6,11 @@
             [wg-link.service.wireguard :as wg]
             [wg-link.service.util :refer [index-of merge-if-exists]]))
 
-(defn- new-network [nm net domain port]
+(defn- new-network [nm cidr domain port]
   (let [[private-key public-key] (wg/keypair-gen)]
     {:name nm
-     :network net
-     :server {:address (first (cidr/available-ips net []))
+     :cidr cidr
+     :server {:address (first (cidr/available-ips cidr []))
               :private-key private-key
               :public-key public-key
               :domain domain
@@ -37,11 +37,11 @@
 (def db (atom nil))
 
 (defn- allocate-peer-ip []
-  (let [network (:network @db)
+  (let [cidr (:cidr @db)
         peer-ips (map :address (:peers @db))
         server-ip (get-in @db [:server :address])
         occupied-ips (conj peer-ips server-ip)]
-    (first (cidr/available-ips network occupied-ips))))
+    (first (cidr/available-ips cidr occupied-ips))))
 
 (defn db-file [nm]
   (str wg/conf-dir "/" nm ".json"))
@@ -62,7 +62,7 @@
 (defn- update-db! [f]
   (let [db (f db)]
     (persist-db db)
-    (wg/update-conf (merge (:server db) (select-keys db [:name :network]))
+    (wg/update-conf (assoc (:server db) :name (:name db) :network (:cidr db))
                     (:peers db))
     (wg/reload-interface (:name db))))
 
@@ -111,7 +111,7 @@
   (->> (:peers @db)
        (filter #(= (str (:id %)) id))
        (first)
-       (wg/peer-conf (assoc (:server @db) :network (:network @db)))))
+       (wg/peer-conf (assoc (:server @db) :network (:cidr @db)))))
 
 (defn peer-delete [id]
   (update-db!
