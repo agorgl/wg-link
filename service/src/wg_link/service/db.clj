@@ -62,8 +62,7 @@
 (defn- update-db! [f]
   (let [db (f db)]
     (persist-db db)
-    (wg/update-conf (assoc (:server db) :name (:name db) :network (:cidr db))
-                    (:peers db))
+    (wg/update-conf db)
     (wg/reload-interface (:name db))))
 
 (defn init-network [nm net domain port]
@@ -111,7 +110,7 @@
   (->> (:peers @db)
        (filter #(= (str (:id %)) id))
        (first)
-       (wg/peer-conf (assoc (:server @db) :network (:cidr @db)))))
+       (wg/peer-conf (:cidr @db) (:server @db))))
 
 (defn peer-delete [id]
   (update-db!
