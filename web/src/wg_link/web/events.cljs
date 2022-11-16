@@ -1,6 +1,5 @@
 (ns wg-link.web.events
   (:require
-   [clojure.set :refer [rename-keys]]
    [re-frame.core :as re-frame]
    [ajax.core :as ajax]
    [wg-link.web.db :as db]
@@ -33,9 +32,7 @@
  ::peers-fetched
  (fn [db [_ peers]]
    (reset! id-gen (or (reduce max (map :id peers)) 0))
-   (assoc db :peers (mapv #(-> %
-                               (select-keys [:id :name :address :gateway-ips :enabled])
-                               (rename-keys {:address :ip})) peers))))
+   (assoc db :peers peers)))
 
 (re-frame/reg-event-fx
  ::add-peer
@@ -44,10 +41,10 @@
      {:db (update-in db [:peers] #(->> %
                                        (concat [{:id next-id
                                                  :name name
-                                                 :ip "<pending>"
+                                                 :address "<pending>"
                                                  :gateway-ips []
                                                  :enabled true}])
-                                       (sort-by :ip)
+                                       (sort-by :address)
                                        (vec)))
       :http-xhrio {:method          :post
                    :uri             (str conf/api-url "/peers")
@@ -60,7 +57,7 @@
  ::peer-added
  (fn [db [_ id peer]]
    (let [pidx (index-of #(= (:id %) id) (get-in db [:peers]))]
-     (update-in db [:peers pidx] assoc :id (:id peer) :ip (:address peer)))))
+     (update-in db [:peers pidx] assoc :id (:id peer) :address (:address peer)))))
 
 (re-frame/reg-event-fx
  ::update-peer
@@ -69,7 +66,7 @@
      {:db (update-in db [:peers pidx] merge params)
       :http-xhrio {:method          :patch
                    :uri             (str conf/api-url "/peers/" id)
-                   :params          (rename-keys params {:ip :address})
+                   :params          params
                    :format          (ajax/json-request-format)
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [::peer-updated]}})))

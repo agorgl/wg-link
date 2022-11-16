@@ -152,14 +152,14 @@
             :on-click #(reset! dialog [:peer-ips id ips])}
      [icon-edit]]]])
 
-(defn peer [{:keys [id name ip gateway-ips] :as p}]
+(defn peer [{:keys [id name address gateway-ips] :as p}]
   [:div {:class "relative overflow-hidden border-b border-gray-100 border-solid"}
    [:div {:class "relative p-5 z-10 flex flex-row"}
     [:div {:class "h-10 w-10 my-auto mr-4 rounded-full bg-gray-50 relative"}
      [icon-avatar]]
     [:div {:class "flex-grow"}
      [peer-name id name]
-     [peer-ips id (into [ip] gateway-ips)]]
+     [peer-ips id (into [address] gateway-ips)]]
     [:div {:class "text-right my-auto"}
      [peer-controls p]]]])
 
