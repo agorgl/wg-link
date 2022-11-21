@@ -44,24 +44,24 @@ while [ "$1" != "" ]; do
 done
 
 # Gather applicable containers
-containers=$(podman ps --format '{{ .Names }}' | grep 'wg-')
+containers=($(podman ps --format '{{ .Names }}' | grep 'wg-'))
 
 # For each container
-all_routes=""
-for container in $containers; do
+all_routes=()
+for container in ${containers[@]}; do
     # Get container ip and routes
     container_ip=$(podman inspect $container -f '{{ .NetworkSettings.IPAddress }}')
-    container_routes=$(podman exec $container ip route | grep wg | awk '{print $1}' | grep '/' | xargs -r printf "%s:$container_ip\n")
-    all_routes+=$container_routes
+    container_routes=($(podman exec $container ip route | grep wg | awk '{print $1}' | grep '/' | xargs -r printf "%s:$container_ip\n"))
+    all_routes+=(${container_routes[@]})
 
     # Get existing routes
-    routes=$(ip route show table $ROUTING_TABLE | awk '{print $1 ":" $3}')
+    routes=($(ip route show table $ROUTING_TABLE | awk '{print $1 ":" $3}'))
 
     # Calculate new routes
-    new_routes=$(comm -23 <(printf "%s\n" $container_routes | sort) <(printf "%s\n" $routes | sort))
+    new_routes=($(comm -23 <(printf "%s\n" ${container_routes[@]} | sort) <(printf "%s\n" ${routes[@]} | sort)))
 
     # Add them to custom routing table
-    for r in $new_routes; do
+    for r in ${new_routes[@]}; do
         route=${r/:/ via }
         echo "Adding new route $route"
         ip route add $route table $ROUTING_TABLE
@@ -69,11 +69,11 @@ for container in $containers; do
 done
 
 # Calculate old routes
-routes=$(ip route show table $ROUTING_TABLE | awk '{print $1 ":" $3}')
-old_routes=$(comm -13 <(printf "%s\n" $all_routes | sort | uniq) <(printf "%s\n" $routes | sort))
+routes=($(ip route show table $ROUTING_TABLE | awk '{print $1 ":" $3}'))
+old_routes=($(comm -13 <(printf "%s\n" ${all_routes[@]} | sort | uniq) <(printf "%s\n" ${routes[@]} | sort)))
 
 # Remove old routes from custom routing table
-for r in $old_routes; do
+for r in ${old_routes[@]}; do
     route=${r/:/ via }
     echo "Removing old route $route"
     ip route del $route table $ROUTING_TABLE
